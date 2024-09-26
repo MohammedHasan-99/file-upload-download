@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload and Download</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        
+        h1 {
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        form {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        input[type="file"] {
+            display: none;
+        }
+        
+        .file-label {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 1px solid #007bff;
+        }
+        
+        .file-label:hover {
+            background-color: #0056b3;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        
+        button:hover {
+            background-color: #218838;
+        }
+        
+        #progressContainer {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        
+        li {
+            background-color: #f9f9f9;
+            margin-bottom: 10px;
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .file-info {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+        
+        .file-name {
+            font-weight: bold;
+            color: #007bff;
+        }
+        
+        .file-time {
+            font-size: 0.9em;
+            color: #888;
+        }
+        
+        .btn-container {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 6px 10px;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .delete-btn {
+            background-color: #dc3545;
+        }
+        
+        .delete-btn:hover {
+            background-color: #c82333;
+        }
+        
+        .download-btn {
+            background-color: #007bff;
+        }
+        
+        .download-btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>File Upload and Download</h1>
+        <form id="uploadForm">
+            <label for="fileInput" class="file-label">Choose File</label>
+            <input type="file" id="fileInput" />
+            <button type="submit">Upload</button>
+        </form>
+
+        <!-- Progress bar -->
+        <div id="progressContainer" style="display:none;">
+            <progress id="progressBar" value="0" max="100" style="width: 100%;"></progress>
+            <p id="progressText">0%</p>
+        </div>
+
+        <h1>Available Files for Download</h1>
+        <ul id="fileList"></ul>
+    </div>
+
+    <script>
+        const uploadForm = document.getElementById('uploadForm');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        const fileInput = document.getElementById('fileInput');
+
+        // Handle form submission for uploading files
+        uploadForm.addEventListener('submit', async(event) => {
+            event.preventDefault();
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+
+            progressContainer.style.display = 'block';
+
+            const xhr = new XMLHttpRequest();
+            xhr.upload.addEventListener('progress', (event) => {
+                if (event.lengthComputable) {
+                    const percentComplete = (event.loaded / event.total) * 100;
+                    progressBar.value = percentComplete;
+                    progressText.textContent = `${Math.round(percentComplete)}%`;
+                }
+            });
+
+            xhr.open('POST', 'http://192.168.0.152:3000/files/upload', true);
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    alert('File uploaded successfully');
+                    progressContainer.style.display = 'none';
+                    progressBar.value = 0;
+                    progressText.textContent = '0%';
+
+                    // Clear the file input
+                    fileInput.value = '';
+                    location.reload()
+                        // Reload the file list after upload
+                    loadFileList();
+                } else {
+                    alert('http://192.168.0.152:3000/files/upload');
+                }
+            };
+
+            xhr.send(formData);
+            location.reload()
+
+        });
+
+        // Load file list
+        async function loadFileList() {
+            const fileList = document.getElementById('fileList');
+            fileList.innerHTML = ''; // Clear the list before loading new content
+
+            // Add a timestamp to the URL to prevent caching
+            const response = await fetch(`http://192.168.0.152:3000/files/list?timestamp=${new Date().getTime()}`);
+            const files = await response.json();
+
+            if (files.length === 0) {
+                fileList.innerHTML = '<li>No files available</li>';
+            } else {
+                files.forEach((file) => {
+                    const listItem = document.createElement('li');
+
+                    const fileInfo = document.createElement('div');
+                    fileInfo.classList.add('file-info');
+
+                    const fileName = document.createElement('span');
+                    fileName.textContent = file.filename; // Display original name
+                    fileName.classList.add('file-name');
+
+                    const fileTime = document.createElement('span');
+                    const uploadDate = new Date(file.uploadTime);
+                    fileTime.textContent = `Uploaded at: ${uploadDate.toLocaleString()}`;
+                    fileTime.classList.add('file-time');
+
+                    fileInfo.appendChild(fileName);
+                    fileInfo.appendChild(fileTime);
+
+                    const btnContainer = document.createElement('div');
+                    btnContainer.classList.add('btn-container');
+
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = `http://192.168.0.152:3000/files/download/${file.filename}`;
+                    downloadLink.classList.add('btn', 'download-btn');
+                    downloadLink.textContent = 'Download';
+
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.classList.add('btn', 'delete-btn');
+                    deleteBtn.textContent = 'Delete';
+                    deleteBtn.addEventListener('click', async() => {
+                        if (confirm(`Are you sure you want to delete ${file.filename}?`)) {
+                            await deleteFile(file.filename);
+                            loadFileList(); // Reload the file list after deletion
+                        }
+                    });
+
+                    btnContainer.appendChild(downloadLink);
+                    btnContainer.appendChild(deleteBtn);
+
+                    listItem.appendChild(fileInfo);
+                    listItem.appendChild(btnContainer);
+                    fileList.appendChild(listItem);
+                });
+            }
+        }
+
+        // Delete file
+        async function deleteFile(filename) {
+            const response = await fetch(`http://192.168.0.152:3000/files/delete/${filename}`, {
+                method: 'DELETE'
+            });
+            if (response.ok) {
+                alert('File deleted successfully');
+            } else {
+                alert('Error deleting file');
+            }
+        }
+
+        // Initial load of the file list
+        loadFileList();
+
+        // Customize file input appearance
+        const customFileInput = document.querySelector('.file-label');
+        fileInput.addEventListener('change', function() {
+            if (fileInput.files.length > 0) {
+                customFileInput.textContent = fileInput.files[0].name; // Show selected file name
+            } else {
+                customFileInput.textContent = 'Choose File'; // Reset to default text
+            }
+        });
+    </script>
+
+</body>
+
+</html>
