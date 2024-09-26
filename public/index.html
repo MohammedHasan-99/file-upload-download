@@ -161,9 +161,56 @@
         const fileInput = document.getElementById('fileInput');
 
         // Handle form submission for uploading files
+        // uploadForm.addEventListener('submit', async(event) => {
+        //     event.preventDefault();
+        //     const file = fileInput.files[0];
+        //     const formData = new FormData();
+        //     formData.append('file', file);
+
+        //     progressContainer.style.display = 'block';
+
+        //     const xhr = new XMLHttpRequest();
+        //     xhr.upload.addEventListener('progress', (event) => {
+        //         if (event.lengthComputable) {
+        //             const percentComplete = (event.loaded / event.total) * 100;
+        //             progressBar.value = percentComplete;
+        //             progressText.textContent = `${Math.round(percentComplete)}%`;
+        //         }
+        //     });
+
+        //     xhr.open('POST', 'http://192.168.0.152:3000/files/upload', true);
+        //     xhr.onload = function() {
+        //         if (xhr.status === 200) {
+        //             alert('File uploaded successfully');
+        //             progressContainer.style.display = 'none';
+        //             progressBar.value = 0;
+        //             progressText.textContent = '0%';
+
+        //             // Clear the file input
+        //             fileInput.value = '';
+        //             location.reload()
+        //                 // Reload the file list after upload
+        //             loadFileList();
+        //         } else {
+        //             alert('http://192.168.0.152:3000/files/upload');
+        //         }
+        //     };
+
+        //     xhr.send(formData);
+        //     location.reload()
+
+        // });
+
         uploadForm.addEventListener('submit', async(event) => {
             event.preventDefault();
+
+            // Ensure a file is selected before uploading
             const file = fileInput.files[0];
+            if (!file) {
+                alert('Please select a file to upload.');
+                return;
+            }
+
             const formData = new FormData();
             formData.append('file', file);
 
@@ -188,19 +235,21 @@
 
                     // Clear the file input
                     fileInput.value = '';
-                    location.reload()
-                        // Reload the file list after upload
+
+                    // location.reload()
+                    window.location.reload();
+
+                    // Reload the file list after upload
                     loadFileList();
                 } else {
-                    alert('http://192.168.0.152:3000/files/upload');
+                    alert('Error uploading file');
                 }
             };
-
+            console.log(formData)
+            loadFileList();
             xhr.send(formData);
-            location.reload()
-
+            // location.reload()
         });
-
         // Load file list
         async function loadFileList() {
             const fileList = document.getElementById('fileList');
