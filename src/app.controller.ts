@@ -4,12 +4,16 @@ import { diskStorage } from 'multer';
 import { join } from 'path';
 import { Response } from 'express';
 import * as fs from 'fs';
+import { ipAddress, port } from './main'; // Import the variables
 
 
 interface FileMetadata {
   filename: string;
   uploadTime: string;
 }
+// // Add the IP address and port dynamically
+// const ipAddress = '0.0.0.0';  // Adjust this to be dynamic in your main.ts
+// const port = 3000;
 
 @Controller('files')
 export class AppController {
@@ -22,6 +26,11 @@ export class AppController {
     if (!fs.existsSync(this.metadataFile)) {
       fs.writeFileSync(this.metadataFile, JSON.stringify([]));
     }
+  }
+
+  @Get('server-info') // API route to expose IP address and port
+  getServerInfo() {
+    return { ipAddress, port };
   }
 
   @Post('upload')
