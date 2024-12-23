@@ -24,16 +24,18 @@ if defined DEVICE_IP (
 )
 
 REM Navigate to the file-upload-download directory
-cd /d "C:\Users\mohdh\Desktop\file-upload-download"
+@REM cd /d "C:\Users\mohdh\Desktop\file-upload-download"
+cd /d "%~dp0"
+
 if errorlevel 1 (
-    echo Failed to change directory to C:\Users\mohdh\Desktop\file-upload-download >> log.txt
-    echo Failed to change directory to C:\Users\mohdh\Desktop\file-upload-download
+    echo Failed to change directory to %~dp0 >> log.txt
+    echo Failed to change directory to %~dp0 
     echo Directory not found. Exiting. >> log.txt
     echo Directory not found. Exiting.
     exit /b 1
 ) else (
-    echo Successfully changed directory to C:\Users\mohdh\Desktop\file-upload-download >> log.txt
-    echo Successfully changed directory to C:\Users\mohdh\Desktop\file-upload-download
+    echo Successfully changed directory to %~dp0 >> log.txt
+    echo Successfully changed directory to %~dp0 
 )
 
 REM Run npm start with the IP address and port 3000 in the same window
